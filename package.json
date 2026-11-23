@@ -1,0 +1,31 @@
+{
+  "name": "offline-billing-pos",
+  "productName": "Offline Billing POS",
+  "version": "1.0.0",
+  "description": "Offline Windows billing software with cloud sync hook",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist:win": "electron-builder --win nsis --x64"
+  },
+  "build": {
+    "appId": "com.example.offlinebillingpos",
+    "productName": "Offline Billing POS",
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  },
+  "devDependencies": {
+    "electron": "^33.2.1",
+    "electron-builder": "^25.1.8"
+  }
+}
