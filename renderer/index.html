@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Offline Billing POS</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; display: flex; height: 100vh; background: #f4f6f9; }
+    nav { width: 220px; background: #1e293b; color: #fff; padding: 16px; display: flex; flex-direction: column; gap: 8px; }
+    nav button { background: #334155; color: #fff; border: none; padding: 10px; text-align: left; cursor: pointer; border-radius: 4px; }
+    nav button:hover { background: #475569; }
+    main { flex: 1; padding: 20px; overflow-y: auto; }
+    .panel { display: none; background: #fff; padding: 18px; border-radius: 6px; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+    .panel.active { display: block; }
+    input, select, button { padding: 8px; margin: 4px 0; }
+    table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+    th, td { border: 1px solid #cbd5e1; padding: 8px; text-align: left; }
+    .receipt-box { border: 1px dashed #334155; padding: 14px; margin-top: 12px; background: #fafafa; }
+    @media print { nav, .no-print { display: none !important; } main { padding: 0; } }
+  </style>
+</head>
+<body>
+  <nav class="no-print">
+    <h3>Billing POS</h3>
+    <button data-tab="company">9. Company Setup</button>
+    <button data-tab="products">1. Product Creation</button>
+    <button data-tab="customers">3. Customer Adding</button>
+    <button data-tab="sales">2. Sales</button>
+    <button data-tab="sale-return">6. Sale Return</button>
+    <button data-tab="purchases">7. Purchase</button>
+    <button data-tab="purchase-return">8. Purchase Return</button>
+    <button data-tab="receipt">4. Receipt & 10. Print</button>
+    <button data-tab="report">5. Report & Cloud Sync</button>
+  </nav>
+
+  <main>
+    <section id="company" class="panel active">
+      <h2>9. Company Setup & Cloud Sync Settings</h2>
+      <input id="compName" placeholder="Company Name" />
+      <input id="compPhone" placeholder="Phone" />
+      <input id="compTax" placeholder="GST / Tax ID" /><br/>
+      <input id="compAddress" placeholder="Address" style="width: 60%;" /><br/>
+      <h4>Cloud Sync Arrangement (Optional)</h4>
+      <input id="cloudEndpoint" placeholder="Cloud Sync API URL (https://...)" style="width: 60%;" />
+      <input id="cloudApiKey" placeholder="API Key (optional)" /><br/>
+      <button id="btnSaveCompany">Save Company Settings</button>
+    </section>
+
+    <section id="products" class="panel">
+      <h2>1. Product Creation</h2>
+      <input id="prodSku" placeholder="SKU / Code" />
+      <input id="prodName" placeholder="Product Name" />
+      <input id="prodBuy" type="number" step="0.01" placeholder="Purchase Price" />
+      <input id="prodSell" type="number" step="0.01" placeholder="Sale Price" />
+      <input id="prodStock" type="number" placeholder="Opening Stock" />
+      <button id="btnAddProduct">Add Product</button>
+      <table><thead><tr><th>SKU</th><th>Name</th><th>Buy</th><th>Sell</th><th>Stock</th></tr></thead><tbody id="tblProducts"></tbody></table>
+    </section>
+
+    <section id="customers" class="panel">
+      <h2>3. Customer Adding</h2>
+      <input id="custName" placeholder="Customer Name" />
+      <input id="custPhone" placeholder="Phone" />
+      <input id="custAddress" placeholder="Address" />
+      <button id="btnAddCustomer">Add Customer</button>
+      <table><thead><tr><th>Name</th><th>Phone</th><th>Address</th></tr></thead><tbody id="tblCustomers"></tbody></table>
+    </section>
+
+    <section id="sales" class="panel">
+      <h2>2. Sales</h2>
+      <select id="saleCustomer"></select>
+      <select id="saleProduct"></select>
+      <input id="saleQty" type="number" min="1" value="1" placeholder="Qty" />
+      <button id="btnCreateSale">Record Sale & Generate Receipt</button>
+      <table><thead><tr><th>Receipt #</th><th>Customer</th><th>Total</th><th>Date</th></tr></thead><tbody id="tblSales"></tbody></table>
+    </section>
+
+    <section id="sale-return" class="panel">
+      <h2>6. Sale Return</h2>
+      <select id="srSaleSelect"></select>
+      <input id="srAmount" type="number" step="0.01" placeholder="Refund Amount" />
+      <button id="btnAddSaleReturn">Record Sale Return</button>
+      <table><thead><tr><th>Return ID</th><th>Receipt #</th><th>Refund</th><th>Date</th></tr></thead><tbody id="tblSaleReturns"></tbody></table>
+    </section>
+
+    <section id="purchases" class="panel">
+      <h2>7. Purchase</h2>
+      <input id="purchSupplier" placeholder="Supplier Name" />
+      <select id="purchProduct"></select>
+      <input id="purchQty" type="number" min="1" value="1" placeholder="Qty" />
+      <button id="btnCreatePurchase">Record Purchase & Add Stock</button>
+      <table><thead><tr><th>ID</th><th>Supplier</th><th>Product</th><th>Qty</th><th>Total</th></tr></thead><tbody id="tblPurchases"></tbody></table>
+    </section>
+
+    <section id="purchase-return" class="panel">
+      <h2>8. Purchase Return</h2>
+      <select id="prPurchaseSelect"></select>
+      <input id="prQty" type="number" min="1" value="1" placeholder="Return Qty" />
+      <button id="btnAddPurchaseReturn">Record Purchase Return</button>
+      <table><thead><tr><th>ID</th><th>Purchase ID</th><th>Return Qty</th><th>Date</th></tr></thead><tbody id="tblPurchaseReturns"></tbody></table>
+    </section>
+
+    <section id="receipt" class="panel">
+      <div class="no-print">
+        <h2>4. Receipt & 10. Print</h2>
+        <select id="receiptSaleSelect"></select>
+        <button id="btnPrintNow">10. Print Receipt</button>
+      </div>
+      <div id="receiptPreview" class="receipt-box">Select a sale to view receipt.</div>
+    </section>
+
+    <section id="report" class="panel">
+      <h2>5. Report & Cloud Sync</h2>
+      <button id="btnSyncCloud" class="no-print">Sync Pending Queue to Cloud</button>
+      <p id="syncStatus"></p>
+      <div id="reportSummary"></div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
