@@ -2,724 +2,354 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Techbay POS Desktop</title>
+  <title>Techbay POS</title>
   <style>
     * { box-sizing: border-box; font-family: "Segoe UI", Arial, sans-serif; }
-    body { margin: 0; display: flex; height: 100vh; background: #f3f4f6; color: #111827; }
+    body { margin: 0; height: 100vh; background: #f3f4f6; color: #111827; }
 
-    /* Sidebar */
+    /* Auth Gate Screen */
+    #authGate {
+      display: flex; align-items: center; justify-content: center;
+      height: 100vh; padding: 20px; background: #eef2ff;
+    }
+    .auth-card {
+      width: 100%; max-width: 420px; background: #fff; border: 1px solid #cbd5e1;
+      border-radius: 10px; padding: 24px; box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+    }
+    .auth-card h2 { margin: 0 0 6px; color: #1e3a8a; }
+    .auth-card p { margin: 0 0 16px; font-size: 13px; color: #475569; }
+    .field { margin-bottom: 12px; }
+    .field label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 4px; color: #334155; }
+    .field input { width: 100%; }
+
+    /* App Shell */
+    #appShell { display: none; height: 100vh; width: 100%; }
+    #appShell.active { display: flex; }
+
     .sidebar {
-      width: 230px; background: #1e3a8a; color: #fff;
+      width: 225px; background: #1e3a8a; color: #fff;
       display: flex; flex-direction: column; justify-content: space-between; overflow-y: auto;
     }
-    .brand { padding: 16px; font-size: 18px; font-weight: 700; border-bottom: 1px solid rgba(255,255,255,0.15); }
+    .brand { padding: 15px 16px; font-size: 18px; font-weight: 700; border-bottom: 1px solid rgba(255,255,255,0.16); }
     .nav-btn {
-      width: 100%; border: none; background: transparent; color: #e5e7eb;
-      text-align: left; padding: 11px 16px; cursor: pointer; font-size: 14px;
+      width: 100%; border: none; background: transparent; color: #e2e8f0;
+      text-align: left; padding: 10px 16px; cursor: pointer; font-size: 14px;
     }
     .nav-btn:hover, .nav-btn.active { background: #1d4ed8; color: #fff; font-weight: 600; }
-    .auth-box { padding: 12px 14px; background: rgba(0,0,0,0.2); font-size: 12px; }
+    .side-footer { padding: 12px; background: rgba(0,0,0,0.22); font-size: 12px; }
 
-    /* Main Content */
     .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
     .topbar {
-      background: #fff; padding: 10px 18px; border-bottom: 1px solid #e5e7eb;
-      display: flex; justify-content: space-between; align-items: center;
+      background: #fff; border-bottom: 1px solid #e5e7eb; padding: 10px 18px;
+      display: flex; justify-content: space-between; align-items: center; gap: 12px;
     }
     .content { flex: 1; padding: 16px; overflow-y: auto; }
-    .section { display: none; }
-    .section.active { display: block; }
+    .panel { display: none; background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 14px; }
+    .panel.active { display: block; }
 
-    /* Tables + Billing Split */
-    .tables-layout { display: grid; grid-template-columns: 1.35fr 1fr; gap: 16px; align-items: start; }
-    .table-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(165px, 1fr)); gap: 12px; margin-top: 12px; }
-    .table-card {
-      border-radius: 8px; padding: 14px; cursor: pointer; border: 2px solid transparent;
-      transition: transform 0.1s;
-    }
-    .table-card:hover { transform: translateY(-1px); }
+    .split { display: grid; grid-template-columns: 1.35fr 1fr; gap: 16px; align-items: start; }
+    .table-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; margin-top: 12px; }
+    .table-card { border-radius: 8px; padding: 12px; cursor: pointer; border: 2px solid transparent; }
     .table-card.empty { background: #f0fdf4; border-color: #86efac; }
     .table-card.active { background: #fff7ed; border-color: #fdba74; }
     .table-card.selected { outline: 3px solid #1d4ed8; }
-    .badge {
-      display: inline-block; padding: 2px 8px; border-radius: 999px;
-      font-size: 11px; font-weight: 700; color: #fff; margin: 6px 0;
-    }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 700; color: #fff; margin: 6px 0; }
     .badge.empty { background: #16a34a; }
     .badge.active { background: #ea580c; }
 
-    .panel { background: #fff; border-radius: 8px; padding: 14px; border: 1px solid #e5e7eb; margin-bottom: 14px; }
-    .row { display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; align-items: center; }
-    input, select {
-      padding: 8px 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px;
-    }
+    .row { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; align-items: center; }
+    input, select { padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; }
     button {
       padding: 8px 12px; border: none; border-radius: 6px; cursor: pointer;
       font-size: 13px; font-weight: 600; background: #1d4ed8; color: #fff;
     }
-    button.secondary { background: #4b5563; }
+    button.secondary { background: #475569; }
     button.success { background: #15803d; }
     button.warn { background: #ea580c; }
     button.danger { background: #b91c1c; }
 
-    table { width: 100%; border-collapse: collapse; background: #fff; }
+    table { width: 100%; border-collapse: collapse; margin-top: 8px; }
     th, td { border: 1px solid #e5e7eb; padding: 8px 10px; text-align: left; font-size: 13px; }
-    th { background: #f9fafb; }
+    th { background: #f8fafc; }
 
-    .bill-preview {
+    .receipt-box {
       white-space: pre-wrap; background: #f8fafc; border: 1px dashed #94a3b8;
       padding: 10px; border-radius: 6px; font-family: Consolas, monospace; font-size: 12px;
       max-height: 240px; overflow-y: auto;
     }
-    .product-tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
-    .tile {
-      background: #1d4ed8; color: #fff; padding: 12px; border-radius: 8px; cursor: pointer;
-    }
+    .tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(145px, 1fr)); gap: 10px; margin-top: 10px; }
+    .tile { background: #1d4ed8; color: #fff; padding: 12px; border-radius: 8px; cursor: pointer; }
     .tile:hover { background: #1e40af; }
   </style>
 </head>
 <body>
-  <aside class="sidebar">
-    <div>
-      <div class="brand">Techbay POS</div>
-      <button class="nav-btn active" data-sec="TABLES">Tables & Billing</button>
-      <button class="nav-btn" data-sec="DASHBOARD">Dashboard (POS Grid)</button>
-      <button class="nav-btn" data-sec="PRODUCTS">Products</button>
-      <button class="nav-btn" data-sec="PURCHASE">Purchase</button>
-      <button class="nav-btn" data-sec="PURCHASE_RETURN">Purchase Return</button>
-      <button class="nav-btn" data-sec="EXPENSE">Expense</button>
-      <button class="nav-btn" data-sec="CUSTOMERS">Customers</button>
-      <button class="nav-btn" data-sec="RECEIPT">Receipt</button>
-      <button class="nav-btn" data-sec="SALE_RETURN">Sale Return</button>
-      <button class="nav-btn" data-sec="REPORT">Report</button>
-      <button class="nav-btn" data-sec="PRINTER">Printer</button>
-      <button class="nav-btn" data-sec="SETUP">Setup</button>
-    </div>
-
-    <div class="auth-box">
-      <div id="authStatusText">Not Authorized</div>
-      <div id="queueStatusText" style="margin-top:4px;opacity:0.85;">Pending Queue: 0</div>
-      <div class="row" style="margin-top:8px;">
-        <button onclick="openAuthModal()" style="padding:5px 8px;font-size:11px;">Client Auth</button>
-        <button class="secondary" onclick="manualSync()" style="padding:5px 8px;font-size:11px;">Sync Now</button>
+  <!-- AUTHORIZATION GATE -->
+  <div id="authGate">
+    <div class="auth-card">
+      <h2>Techbay POS Authorization</h2>
+      <p>Enter your Client ID and Access Key to verify workspace and pull cloud data.</p>
+      <div class="field">
+        <label for="authClientId">Client ID</label>
+        <input id="authClientId" type="text" placeholder="e.g. techbay2026" />
       </div>
+      <div class="field">
+        <label for="authAccessKey">Access Key</label>
+        <input id="authAccessKey" type="password" placeholder="Enter Access Key" />
+      </div>
+      <button id="btnAuthorizeClient" type="button" style="width:100%;">Authorize & Pull Data</button>
+      <div id="authGateStatus" style="margin-top:12px;font-size:13px;color:#1d4ed8;"></div>
     </div>
-  </aside>
+  </div>
 
-  <div class="main">
-    <header class="topbar">
-      <h2 id="screenTitle" style="margin:0;font-size:18px;">Tables & Billing</h2>
-      <div id="toastBanner" style="font-size:13px;color:#1d4ed8;font-weight:600;"></div>
-    </header>
+  <!-- MAIN APPLICATION -->
+  <div id="appShell">
+    <aside class="sidebar">
+      <div>
+        <div class="brand">Techbay POS</div>
+        <button class="nav-btn active" data-tab="tab-tables">Tables & Billing</button>
+        <button class="nav-btn" data-tab="tab-dashboard">Dashboard (POS Grid)</button>
+        <button class="nav-btn" data-tab="tab-products">Products</button>
+        <button class="nav-btn" data-tab="tab-purchase">Purchase</button>
+        <button class="nav-btn" data-tab="tab-purchase-return">Purchase Return</button>
+        <button class="nav-btn" data-tab="tab-expense">Expense</button>
+        <button class="nav-btn" data-tab="tab-customers">Customers</button>
+        <button class="nav-btn" data-tab="tab-receipt">Receipt</button>
+        <button class="nav-btn" data-tab="tab-sale-return">Sale Return</button>
+        <button class="nav-btn" data-tab="tab-report">Report</button>
+        <button class="nav-btn" data-tab="tab-printer">Printer</button>
+        <button class="nav-btn" data-tab="tab-setup">Setup</button>
+      </div>
 
-    <div class="content">
-      <!-- 1. DEFAULT OPENING SCREEN: TABLES + BILLING BOX -->
-      <section id="sec-TABLES" class="section active">
-        <div class="tables-layout">
-          <div class="panel">
-            <div class="row" style="justify-content:space-between;">
-              <strong id="tablesCounts">Active: 0 | Empty: 0</strong>
-              <div class="row" style="margin:0;">
-                <button class="secondary" onclick="selectTakeaway()">Takeaway</button>
-                <button class="success" onclick="promptAddTable()">+ Add Table</button>
+      <div class="side-footer">
+        <div id="activeClientLabel">Client: -</div>
+        <div id="syncStatus" style="margin-top:6px;color:#fde68a;">Ready</div>
+        <div class="row" style="margin-top:8px;margin-bottom:0;">
+          <button id="btnSyncCloud" type="button" style="padding:6px 10px;font-size:12px;">Sync Now</button>
+          <button id="btnLogoutClient" type="button" class="secondary" style="padding:6px 10px;font-size:12px;">Switch ID</button>
+        </div>
+      </div>
+    </aside>
+
+    <div class="main">
+      <header class="topbar">
+        <strong id="headerTitle" style="font-size:17px;">Tables & Billing</strong>
+        <span id="topNotice" style="font-size:13px;color:#15803d;font-weight:600;"></span>
+      </header>
+
+      <div class="content">
+        <!-- 1. DEFAULT OPENING TAB: TABLES + BILLING BOX -->
+        <section id="tab-tables" class="panel active">
+          <div class="split">
+            <div>
+              <div class="row" style="justify-content:space-between;">
+                <strong id="tableSummaryCount">Active: 0 | Empty: 0</strong>
+                <div class="row" style="margin:0;">
+                  <button id="btnSelectTakeaway" type="button" class="secondary">Takeaway</button>
+                  <button id="btnAddTable" type="button" class="success">+ Add Table</button>
+                </div>
               </div>
+              <div id="tableCardsContainer" class="table-grid"></div>
             </div>
-            <div id="tableCardsGrid" class="table-grid"></div>
+
+            <div style="border:1px solid #e5e7eb;border-radius:8px;padding:12px;background:#fafafa;">
+              <h3 style="margin:0 0 10px;">Billing Box — <span id="activeTargetLabel">Takeaway</span></h3>
+              <div class="row">
+                <input id="billCustomerName" type="text" placeholder="Customer Name" value="Walk-in Customer" style="flex:1;" />
+                <select id="billPaymentMethod">
+                  <option value="Cash">Cash</option>
+                  <option value="UPI">UPI</option>
+                  <option value="Card">Card</option>
+                  <option value="Credit">Credit</option>
+                </select>
+              </div>
+              <div class="row">
+                <select id="quickBillProduct" style="flex:1;"></select>
+                <input id="quickBillQty" type="number" min="1" step="1" value="1" style="width:75px;" />
+                <button id="btnQuickAddItem" type="button">+ Add</button>
+              </div>
+
+              <table>
+                <thead>
+                  <tr><th>Item</th><th>Qty</th><th>Rate</th><th>Total</th><th></th></tr>
+                </thead>
+                <tbody id="billingBoxBody"></tbody>
+              </table>
+
+              <div class="row" style="margin-top:10px;justify-content:space-between;">
+                <label>Discount: <input id="billDiscount" type="number" min="0" step="0.01" value="0" style="width:95px;" /></label>
+                <strong id="billingBoxTotal">Total: 0.00</strong>
+              </div>
+
+              <div class="row">
+                <button id="btnAddMoreKot" type="button" class="warn">Add More (KOT)</button>
+                <button id="btnGenerateBill" type="button" class="success">Generate Bill & Charge</button>
+                <button id="btnPrintFromBox" type="button" class="secondary">Print</button>
+              </div>
+
+              <div id="latestBillPreview" class="receipt-box">Touch a table or add items to generate a bill.</div>
+            </div>
           </div>
+        </section>
 
-          <div class="panel">
-            <h3 style="margin-top:0;">Billing Box — <span id="billingTargetLabel">Takeaway</span></h3>
-            <div class="row">
-              <input id="billCustomerInput" type="text" placeholder="Customer Name" value="Walk-in Customer" style="flex:1;" />
-              <select id="billPaymentSelect">
-                <option value="Cash">Cash</option>
-                <option value="UPI">UPI</option>
-                <option value="Card">Card</option>
-                <option value="Credit">Credit</option>
-              </select>
-            </div>
-
-            <div class="row">
-              <select id="quickProductSelect" style="flex:1;"></select>
-              <input id="quickQtyInput" type="number" min="1" step="1" value="1" style="width:75px;" />
-              <button onclick="addProductToActiveBill()">+ Add</button>
-            </div>
-
-            <table>
-              <thead>
-                <tr><th>Item</th><th>Qty</th><th>Rate</th><th>Total</th><th></th></tr>
-              </thead>
-              <tbody id="billingLinesBody"></tbody>
-            </table>
-
-            <div class="row" style="margin-top:10px;justify-content:space-between;">
-              <label>Discount: <input id="billDiscountInput" type="number" min="0" step="0.01" value="0" style="width:95px;" onchange="renderBillingBox()" /></label>
-              <strong id="billingGrandTotal">Total: INR 0.00</strong>
-            </div>
-
-            <div class="row" style="margin-top:10px;">
-              <button class="warn" onclick="addMoreKot()">Add More (KOT)</button>
-              <button class="success" onclick="generateAndChargeBill()">Generate Bill (Charge)</button>
-              <button class="secondary" onclick="printCurrentBill()">Print</button>
-            </div>
-
-            <div id="latestReceiptText" class="bill-preview" style="margin-top:10px;">Select a table or add items to generate a bill.</div>
-          </div>
-        </div>
-      </section>
-
-      <!-- 2. DASHBOARD POS TILE GRID -->
-      <section id="sec-DASHBOARD" class="section">
-        <div class="panel">
+        <!-- 2. DASHBOARD POS GRID -->
+        <section id="tab-dashboard" class="panel">
           <div class="row" style="justify-content:space-between;">
-            <strong id="posGridTarget">Target: Takeaway</strong>
-            <input id="posSearchInput" type="text" placeholder="Search product..." oninput="renderPosGrid()" />
+            <strong id="posGridTargetLabel">Target: Takeaway</strong>
+            <input id="posSearch" type="text" placeholder="Search product..." />
           </div>
-          <div id="posProductTiles" class="product-tiles" style="margin-top:10px;"></div>
-        </div>
-      </section>
+          <div id="posProductTiles" class="tiles"></div>
+        </section>
 
-      <!-- 3. PRODUCTS -->
-      <section id="sec-PRODUCTS" class="section">
-        <div class="panel">
-          <h3 style="margin-top:0;">Add Product</h3>
+        <!-- 3. PRODUCTS -->
+        <section id="tab-products" class="panel">
+          <h3 style="margin-top:0;">Products</h3>
           <div class="row">
-            <input id="pName" type="text" placeholder="Product Name" />
-            <input id="pCategory" type="text" placeholder="Category" />
-            <input id="pDesc" type="text" placeholder="Description" />
-            <input id="pCost" type="number" step="0.01" placeholder="Cost Price" style="width:110px;" />
-            <input id="pPrice" type="number" step="0.01" placeholder="Sell Price" style="width:110px;" />
-            <input id="pStock" type="number" step="1" placeholder="Stock" style="width:90px;" />
-            <button onclick="submitNewProduct()">Add Product</button>
+            <input id="prodSku" type="text" placeholder="SKU / Code" />
+            <input id="prodName" type="text" placeholder="Product Name" />
+            <input id="prodBuy" type="number" step="0.01" placeholder="Cost Price" style="width:115px;" />
+            <input id="prodSell" type="number" step="0.01" placeholder="Sale Price" style="width:115px;" />
+            <input id="prodStock" type="number" step="1" placeholder="Stock" style="width:95px;" />
+            <button id="btnAddProduct" type="button">Add Product</button>
           </div>
-        </div>
-        <div class="panel">
           <table>
-            <thead><tr><th>Name</th><th>Category</th><th>Cost</th><th>Sell</th><th>Stock</th><th>Sync ID</th></tr></thead>
-            <tbody id="productsTableBody"></tbody>
+            <thead>
+              <tr><th>SKU</th><th>Name</th><th>Cost</th><th>Sale</th><th>Stock</th></tr>
+            </thead>
+            <tbody id="tblProducts"></tbody>
           </table>
-        </div>
-      </section>
+        </section>
 
-      <!-- 4. PURCHASE -->
-      <section id="sec-PURCHASE" class="section">
-        <div class="panel">
-          <h3 style="margin-top:0;">Record Purchase</h3>
+        <!-- 4. PURCHASE -->
+        <section id="tab-purchase" class="panel">
+          <h3 style="margin-top:0;">Purchase</h3>
           <div class="row">
-            <input id="purSupplier" type="text" placeholder="Supplier Name" />
-            <select id="purProduct"></select>
-            <input id="purQty" type="number" step="0.01" placeholder="Qty" style="width:90px;" />
-            <input id="purCost" type="number" step="0.01" placeholder="Unit Cost" style="width:110px;" />
-            <button onclick="submitPurchase()">Save Purchase</button>
+            <input id="purchSupplier" type="text" placeholder="Supplier Name" />
+            <select id="purchProduct"></select>
+            <input id="purchQty" type="number" step="0.01" placeholder="Qty" style="width:95px;" />
+            <button id="btnCreatePurchase" type="button">Record Purchase</button>
           </div>
-        </div>
-        <div class="panel">
           <table>
-            <thead><tr><th>PO #</th><th>Supplier</th><th>Product</th><th>Qty</th><th>Total</th><th>Date</th></tr></thead>
-            <tbody id="purchasesTableBody"></tbody>
+            <thead>
+              <tr><th>ID</th><th>Supplier</th><th>Product</th><th>Qty</th><th>Total</th></tr>
+            </thead>
+            <tbody id="tblPurchases"></tbody>
           </table>
-        </div>
-      </section>
+        </section>
 
-      <!-- 5. PURCHASE RETURN -->
-      <section id="sec-PURCHASE_RETURN" class="section">
-        <div class="panel">
+        <!-- 5. PURCHASE RETURN -->
+        <section id="tab-purchase-return" class="panel">
           <h3 style="margin-top:0;">Purchase Return</h3>
-          <p>Select a purchase entry from Purchase history to manage returns.</p>
-          <div id="purchaseReturnList"></div>
-        </div>
-      </section>
-
-      <!-- 6. EXPENSE -->
-      <section id="sec-EXPENSE" class="section">
-        <div class="panel">
-          <h3 style="margin-top:0;">Add Expense</h3>
           <div class="row">
-            <input id="expTitle" type="text" placeholder="Title" />
-            <input id="expCat" type="text" placeholder="Category" />
-            <input id="expAmount" type="number" step="0.01" placeholder="Amount" style="width:110px;" />
-            <button onclick="submitExpense()">Save Expense</button>
+            <select id="prPurchaseSelect"></select>
+            <input id="prQty" type="number" step="0.01" placeholder="Return Qty" style="width:110px;" />
+            <button id="btnAddPurchaseReturn" type="button">Record Return</button>
           </div>
-        </div>
-        <div class="panel">
           <table>
-            <thead><tr><th>Title</th><th>Category</th><th>Amount</th><th>Date</th></tr></thead>
-            <tbody id="expensesTableBody"></tbody>
+            <thead>
+              <tr><th>ID</th><th>Purchase</th><th>Qty</th><th>Date</th></tr>
+            </thead>
+            <tbody id="tblPurchaseReturns"></tbody>
           </table>
-        </div>
-      </section>
+        </section>
 
-      <!-- 7. CUSTOMERS -->
-      <section id="sec-CUSTOMERS" class="section">
-        <div class="panel">
+        <!-- 6. EXPENSE -->
+        <section id="tab-expense" class="panel">
+          <h3 style="margin-top:0;">Expense</h3>
+          <div class="row">
+            <input id="expTitle" type="text" placeholder="Expense Title" />
+            <input id="expCategory" type="text" placeholder="Category" />
+            <input id="expAmount" type="number" step="0.01" placeholder="Amount" style="width:110px;" />
+            <button id="btnAddExpense" type="button">Add Expense</button>
+          </div>
+          <table>
+            <thead>
+              <tr><th>Title</th><th>Category</th><th>Amount</th><th>Date</th></tr>
+            </thead>
+            <tbody id="tblExpenses"></tbody>
+          </table>
+        </section>
+
+        <!-- 7. CUSTOMERS -->
+        <section id="tab-customers" class="panel">
           <h3 style="margin-top:0;">Customers</h3>
           <div class="row">
             <input id="custName" type="text" placeholder="Customer Name" />
             <input id="custPhone" type="text" placeholder="Phone" />
-            <button onclick="submitCustomer()">Add Customer</button>
+            <input id="custAddress" type="text" placeholder="Address" />
+            <button id="btnAddCustomer" type="button">Add Customer</button>
           </div>
-          <ul id="customersList"></ul>
-        </div>
-      </section>
+          <table>
+            <thead>
+              <tr><th>Name</th><th>Phone</th><th>Address</th></tr>
+            </thead>
+            <tbody id="tblCustomers"></tbody>
+          </table>
+        </section>
 
-      <!-- 8. RECEIPT -->
-      <section id="sec-RECEIPT" class="section">
-        <div class="tables-layout">
-          <div class="panel">
-            <h3 style="margin-top:0;">Bills & Receipts</h3>
-            <div id="receiptsList"></div>
-          </div>
-          <div class="panel">
-            <h3 style="margin-top:0;">Receipt Detail</h3>
-            <div id="receiptDetailBox" class="bill-preview">Select a receipt on the left.</div>
-            <button style="margin-top:10px;" onclick="printCurrentBill()">Print Receipt</button>
-          </div>
-        </div>
-      </section>
-
-      <!-- 9. SALE RETURN -->
-      <section id="sec-SALE_RETURN" class="section">
-        <div class="panel">
-          <h3 style="margin-top:0;">Sale Return</h3>
-          <div id="saleReturnList"></div>
-        </div>
-      </section>
-
-      <!-- 10. REPORT -->
-      <section id="sec-REPORT" class="section">
-        <div class="panel" id="reportSummaryBox"></div>
-      </section>
-
-      <!-- 11. PRINTER -->
-      <section id="sec-PRINTER" class="section">
-        <div class="panel">
-          <h3 style="margin-top:0;">Printer Setup</h3>
-          <p>Desktop printing uses Windows / system printers via Electron print dialog (supports A4 and 80mm thermal drivers).</p>
-          <button onclick="printCurrentBill()">Test Print</button>
-        </div>
-      </section>
-
-      <!-- 12. SETUP -->
-      <section id="sec-SETUP" class="section">
-        <div class="panel">
-          <h3 style="margin-top:0;">Store Settings</h3>
+        <!-- 8. RECEIPT -->
+        <section id="tab-receipt" class="panel">
+          <h3 style="margin-top:0;">Receipt</h3>
           <div class="row">
-            <input id="setCompany" type="text" placeholder="Company Name" />
-            <input id="setAddress" type="text" placeholder="Address" />
-            <input id="setCurrency" type="text" placeholder="Currency" style="width:90px;" />
-            <input id="setUpi" type="text" placeholder="UPI ID" />
-            <button onclick="saveStoreSettings()">Save Setup</button>
+            <select id="receiptSaleSelect"></select>
+            <button id="btnPrintNow" type="button">Print Receipt</button>
           </div>
-        </div>
-      </section>
+          <div id="receiptPreview" class="receipt-box">No sales recorded yet.</div>
+          <table style="margin-top:12px;">
+            <thead>
+              <tr><th>Receipt #</th><th>Customer</th><th>Total</th><th>Date</th></tr>
+            </thead>
+            <tbody id="tblSales"></tbody>
+          </table>
+        </section>
+
+        <!-- 9. SALE RETURN -->
+        <section id="tab-sale-return" class="panel">
+          <h3 style="margin-top:0;">Sale Return</h3>
+          <div class="row">
+            <select id="srSaleSelect"></select>
+            <input id="srAmount" type="number" step="0.01" placeholder="Refund Amount" style="width:120px;" />
+            <button id="btnAddSaleReturn" type="button">Record Sale Return</button>
+          </div>
+          <table>
+            <thead>
+              <tr><th>ID</th><th>Receipt #</th><th>Refund</th><th>Date</th></tr>
+            </thead>
+            <tbody id="tblSaleReturns"></tbody>
+          </table>
+        </section>
+
+        <!-- 10. REPORT -->
+        <section id="tab-report" class="panel">
+          <h3 style="margin-top:0;">Report</h3>
+          <div id="reportSummary"></div>
+        </section>
+
+        <!-- 11. PRINTER -->
+        <section id="tab-printer" class="panel">
+          <h3 style="margin-top:0;">Printer</h3>
+          <p>Uses Windows / connected printer via Electron print dialog.</p>
+          <button id="btnTestPrint" type="button">Test Print</button>
+        </section>
+
+        <!-- 12. SETUP -->
+        <section id="tab-setup" class="panel">
+          <h3 style="margin-top:0;">Company & Cloud Setup</h3>
+          <div class="row">
+            <input id="compName" type="text" placeholder="Company Name" />
+            <input id="compPhone" type="text" placeholder="Phone" />
+            <input id="compTax" type="text" placeholder="Client ID / Tax ID" />
+            <input id="compAddress" type="text" placeholder="Address" />
+          </div>
+          <div class="row">
+            <input id="cloudEndpoint" type="text" placeholder="Supabase REST Endpoint" style="flex:1;" />
+            <input id="cloudApiKey" type="text" placeholder="Supabase Anon Key" style="flex:1;" />
+            <button id="btnSaveCompany" type="button">Save Setup</button>
+          </div>
+        </section>
+      </div>
     </div>
   </div>
 
-  <script>
-    let state = null;
-    let selectedTable = null; // null = Takeaway
-    let draftLines = [];
-
-    function showToast(msg) {
-      const el = document.getElementById("toastBanner");
-      el.textContent = msg;
-      setTimeout(() => { if (el.textContent === msg) el.textContent = ""; }, 4500);
-    }
-
-    function switchSection(sec) {
-      document.querySelectorAll(".nav-btn").forEach((b) => b.classList.toggle("active", b.dataset.sec === sec));
-      document.querySelectorAll(".section").forEach((s) => s.classList.remove("active"));
-      document.getElementById("sec-" + sec).classList.add("active");
-      const activeBtn = document.querySelector(`.nav-btn[data-sec="${sec}"]`);
-      document.getElementById("screenTitle").textContent = activeBtn ? activeBtn.textContent : sec;
-      renderAll();
-    }
-
-    document.querySelectorAll(".nav-btn").forEach((btn) => {
-      btn.addEventListener("click", () => switchSection(btn.dataset.sec));
-    });
-
-    async function openAuthModal() {
-      const clientId = prompt("Enter Client ID:", state?.auth?.clientId || "");
-      if (clientId === null) return;
-      const accessKey = prompt("Enter Access Key:", state?.auth?.accessKey || "");
-      if (accessKey === null) return;
-      const res = await window.posApi.authorize({ clientId, accessKey });
-      state = res.state;
-      showToast(res.message);
-      renderAll();
-    }
-
-    async function manualSync() {
-      showToast("Syncing with Supabase...");
-      const res = await window.posApi.syncNow();
-      state = res.state;
-      showToast(`Pulled: ${res.pulledCount}${res.errorMessage ? " | " + res.errorMessage : ""}`);
-      renderAll();
-    }
-
-    function selectTakeaway() {
-      selectedTable = null;
-      draftLines = [];
-      document.getElementById("billingTargetLabel").textContent = "Takeaway";
-      document.getElementById("posGridTarget").textContent = "Target: Takeaway";
-      renderAll();
-    }
-
-    function onTouchTable(tbl) {
-      selectedTable = tbl;
-      document.getElementById("billingTargetLabel").textContent = `${tbl.table_name} (${tbl.status})`;
-      document.getElementById("posGridTarget").textContent = `Target: ${tbl.table_name}`;
-
-      // Load active KOT items into billing box if table has an active KOT
-      draftLines = [];
-      if (tbl.status === "ACTIVE" && tbl.active_kot_sync_id && Array.isArray(state.kots)) {
-        const kot = state.kots.find((k) => k.sync_id === tbl.active_kot_sync_id && k.status === "ACTIVE");
-        if (kot && Array.isArray(kot.items)) {
-          draftLines = kot.items.map((it) => ({
-            name: it.name,
-            price: Number(it.price || 0),
-            qty: Number(it.qty || 1)
-          }));
-        }
-      }
-
-      const action = confirm(
-        `${tbl.table_name} is ${tbl.status}.\n\nClick OK to ADD MORE items to this table's bill/KOT, or Cancel to stay in the Billing Box and GENERATE BILL.`
-      );
-      if (action) {
-        switchSection("DASHBOARD");
-      } else {
-        renderBillingBox();
-      }
-    }
-
-    async function promptAddTable() {
-      const name = prompt("Enter new table name (e.g. Table 7):");
-      if (!name || !name.trim()) return;
-      const res = await window.posApi.addTable(name.trim());
-      state = res.state;
-      showToast(res.syncRes?.success ? `Table "${name}" synced` : `Table saved (${res.syncRes?.code || "queued"})`);
-      renderAll();
-    }
-
-    function addProductToActiveBill(prodFromGrid = null) {
-      const products = state?.products || [];
-      let prod = prodFromGrid;
-      let qty = 1;
-
-      if (!prod) {
-        const idx = Number(document.getElementById("quickProductSelect").value);
-        prod = products[idx];
-        qty = Math.max(1, Number(document.getElementById("quickQtyInput").value || 1));
-      }
-      if (!prod) {
-        showToast("Select a product first");
-        return;
-      }
-
-      const existing = draftLines.find((l) => l.name === prod.name && Number(l.price) === Number(prod.price));
-      if (existing) existing.qty = Number(existing.qty) + qty;
-      else draftLines.push({ name: prod.name, price: Number(prod.price), qty });
-
-      renderBillingBox();
-      showToast(`Added ${qty} x ${prod.name}`);
-    }
-
-    function removeDraftLine(index) {
-      draftLines.splice(index, 1);
-      renderBillingBox();
-    }
-
-    async function addMoreKot() {
-      if (!draftLines.length) {
-        showToast("Add items before sending KOT");
-        return;
-      }
-      const res = await window.posApi.sendKot({
-        tableSyncId: selectedTable ? selectedTable.sync_id : "",
-        tableName: selectedTable ? selectedTable.table_name : "Takeaway",
-        items: draftLines
-      });
-      if (!res.ok) {
-        showToast(res.message);
-        return;
-      }
-      state = res.state;
-      if (selectedTable) {
-        selectedTable = state.tables.find((t) => t.sync_id === selectedTable.sync_id) || selectedTable;
-      }
-      showToast(`KOT sent for ${selectedTable ? selectedTable.table_name : "Takeaway"}`);
-      renderAll();
-    }
-
-    async function generateAndChargeBill() {
-      if (!draftLines.length) {
-        showToast("Add items to generate a bill");
-        return;
-      }
-      const curr = state?.settings?.currency || "INR";
-      const company = state?.settings?.companyName || "Techbay Store";
-      const addr = state?.settings?.companyAddress || "";
-      const customer = document.getElementById("billCustomerInput").value.trim() || "Walk-in Customer";
-      const method = document.getElementById("billPaymentSelect").value;
-      const subtotal = draftLines.reduce((acc, l) => acc + Number(l.price) * Number(l.qty), 0);
-      const discount = Math.min(subtotal, Math.max(0, Number(document.getElementById("billDiscountInput").value || 0)));
-      const finalTotal = Math.max(0, subtotal - discount);
-
-      let receipt = `${company}\n${addr}\n--------------------------------\n`;
-      receipt += `Target: ${selectedTable ? selectedTable.table_name : "Takeaway"}\n`;
-      receipt += `Customer: ${customer}\nPayment: ${method}\n--------------------------------\n`;
-      for (const l of draftLines) {
-        receipt += `${l.name} x${l.qty} @ ${curr} ${Number(l.price).toFixed(2)} = ${curr} ${(Number(l.price) * Number(l.qty)).toFixed(2)}\n`;
-      }
-      receipt += `--------------------------------\nSubtotal: ${curr} ${subtotal.toFixed(2)}\nDiscount: ${curr} ${discount.toFixed(2)}\nTOTAL: ${curr} ${finalTotal.toFixed(2)}\n`;
-
-      const res = await window.posApi.settleBill({
-        customer_name: customer,
-        table_name: selectedTable ? selectedTable.table_name : "Takeaway",
-        table_sync_id: selectedTable ? selectedTable.sync_id : "",
-        kot_sync_id: selectedTable ? selectedTable.active_kot_sync_id : "",
-        subtotal,
-        discount,
-        final_total: finalTotal,
-        payment_method: method,
-        bill_text: receipt
-      });
-
-      state = res.state;
-      document.getElementById("latestReceiptText").textContent = receipt;
-      document.getElementById("receiptDetailBox").textContent = receipt;
-      draftLines = [];
-      document.getElementById("billDiscountInput").value = "0";
-      selectedTable = null;
-      document.getElementById("billingTargetLabel").textContent = "Takeaway";
-      showToast(res.billSyncRes?.success ? "Bill generated & synced to Supabase" : `Bill saved (${res.billSyncRes?.code || "queued"})`);
-      renderAll();
-    }
-
-    async function printCurrentBill() {
-      const res = await window.posApi.printBill();
-      showToast(res.ok ? "Sent to printer" : `Print status: ${res.message || "cancelled"}`);
-    }
-
-    async function submitNewProduct() {
-      const res = await window.posApi.addProduct({
-        name: document.getElementById("pName").value,
-        category: document.getElementById("pCategory").value,
-        description: document.getElementById("pDesc").value,
-        cost: document.getElementById("pCost").value,
-        price: document.getElementById("pPrice").value,
-        stock: document.getElementById("pStock").value
-      });
-      if (!res.ok) return showToast(res.message);
-      state = res.state;
-      ["pName", "pCategory", "pDesc", "pCost", "pPrice", "pStock"].forEach((id) => (document.getElementById(id).value = ""));
-      showToast(res.syncRes?.success ? "Product added & synced" : `Product saved (${res.syncRes?.code || "queued"})`);
-      renderAll();
-    }
-
-    async function submitPurchase() {
-      const products = state?.products || [];
-      const prod = products[Number(document.getElementById("purProduct").value)];
-      if (!prod) return showToast("Select a product");
-      const res = await window.posApi.addPurchase({
-        supplier_name: document.getElementById("purSupplier").value,
-        product_name: prod.name,
-        qty: document.getElementById("purQty").value,
-        unit_cost: document.getElementById("purCost").value
-      });
-      state = res.state;
-      showToast("Purchase saved");
-      renderAll();
-    }
-
-    async function submitExpense() {
-      const res = await window.posApi.addExpense({
-        title: document.getElementById("expTitle").value,
-        category: document.getElementById("expCat").value,
-        amount: document.getElementById("expAmount").value
-      });
-      if (!res.ok) return showToast(res.message);
-      state = res.state;
-      ["expTitle", "expCat", "expAmount"].forEach((id) => (document.getElementById(id).value = ""));
-      showToast("Expense saved");
-      renderAll();
-    }
-
-    async function submitCustomer() {
-      const res = await window.posApi.addCustomer({
-        name: document.getElementById("custName").value,
-        phone: document.getElementById("custPhone").value
-      });
-      if (!res.ok) return showToast(res.message);
-      state = res.state;
-      document.getElementById("custName").value = "";
-      document.getElementById("custPhone").value = "";
-      renderAll();
-    }
-
-    async function saveStoreSettings() {
-      state = await window.posApi.saveSettings({
-        companyName: document.getElementById("setCompany").value || "Techbay Store",
-        companyAddress: document.getElementById("setAddress").value || "",
-        currency: document.getElementById("setCurrency").value || "INR",
-        upiId: document.getElementById("setUpi").value || ""
-      });
-      showToast("Settings saved");
-      renderAll();
-    }
-
-    function renderBillingBox() {
-      const curr = state?.settings?.currency || "INR";
-      const body = document.getElementById("billingLinesBody");
-      body.innerHTML = "";
-      let subtotal = 0;
-
-      draftLines.forEach((l, idx) => {
-        const lineTotal = Number(l.price) * Number(l.qty);
-        subtotal += lineTotal;
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${l.name}</td>
-          <td>${l.qty}</td>
-          <td>${Number(l.price).toFixed(2)}</td>
-          <td>${lineTotal.toFixed(2)}</td>
-          <td><button class="danger" onclick="removeDraftLine(${idx})">✕</button></td>
-        `;
-        body.appendChild(tr);
-      });
-
-      const disc = Math.min(subtotal, Math.max(0, Number(document.getElementById("billDiscountInput").value || 0)));
-      const total = Math.max(0, subtotal - disc);
-      document.getElementById("billingGrandTotal").textContent = `Total: ${curr} ${total.toFixed(2)}`;
-    }
-
-    function renderPosGrid() {
-      const curr = state?.settings?.currency || "INR";
-      const q = (document.getElementById("posSearchInput").value || "").trim().toLowerCase();
-      const container = document.getElementById("posProductTiles");
-      container.innerHTML = "";
-      for (const p of state?.products || []) {
-        if (q && !p.name.toLowerCase().includes(q)) continue;
-        const div = document.createElement("div");
-        div.className = "tile";
-        div.innerHTML = `<div style="font-weight:700;">${p.name}</div><div style="margin-top:6px;">${curr} ${Number(p.price).toFixed(2)}</div>`;
-        div.onclick = () => {
-          addProductToActiveBill(p);
-          switchSection("TABLES");
-        };
-        container.appendChild(div);
-      }
-    }
-
-    function renderAll() {
-      if (!state) return;
-      const curr = state.settings?.currency || "INR";
-
-      document.getElementById("authStatusText").textContent = state.auth?.authorized
-        ? `Authorized: ${state.auth.clientName || state.auth.clientId}`
-        : "Not Authorized";
-      document.getElementById("queueStatusText").textContent = `Pending Queue: ${state.pendingQueueCount || 0}`;
-
-      // Tables
-      const tables = state.tables || [];
-      const activeCount = tables.filter((t) => t.status === "ACTIVE").length;
-      const emptyCount = tables.length - activeCount;
-      document.getElementById("tablesCounts").textContent = `Active: ${activeCount} | Empty: ${emptyCount}`;
-
-      const grid = document.getElementById("tableCardsGrid");
-      grid.innerHTML = "";
-      for (const tbl of tables) {
-        const isActive = tbl.status === "ACTIVE";
-        const isSel = selectedTable && selectedTable.sync_id === tbl.sync_id;
-        const card = document.createElement("div");
-        card.className = `table-card ${isActive ? "active" : "empty"} ${isSel ? "selected" : ""}`;
-        card.innerHTML = `
-          <div style="font-weight:700;font-size:15px;">${tbl.table_name}</div>
-          <span class="badge ${isActive ? "active" : "empty"}">${tbl.status}</span>
-          <div style="font-size:12px;color:#4b5563;">${isActive ? "Tap: Add More / Bill" : "Tap to start order"}</div>
-        `;
-        card.onclick = () => onTouchTable(tbl);
-        grid.appendChild(card);
-      }
-
-      // Product dropdowns
-      const quickSel = document.getElementById("quickProductSelect");
-      const purSel = document.getElementById("purProduct");
-      quickSel.innerHTML = "";
-      purSel.innerHTML = "";
-      (state.products || []).forEach((p, i) => {
-        const opt1 = new Option(`${p.name} (${curr} ${Number(p.price).toFixed(2)})`, i);
-        const opt2 = new Option(`${p.name} (Stock: ${p.stock})`, i);
-        quickSel.add(opt1);
-        purSel.add(opt2);
-      });
-
-      renderBillingBox();
-      renderPosGrid();
-
-      // Products table
-      document.getElementById("productsTableBody").innerHTML = (state.products || [])
-        .map((p) => `<tr><td>${p.name}</td><td>${p.category}</td><td>${Number(p.cost).toFixed(2)}</td><td>${Number(p.price).toFixed(2)}</td><td>${p.stock}</td><td>${p.sync_id}</td></tr>`)
-        .join("");
-
-      // Purchases table
-      document.getElementById("purchasesTableBody").innerHTML = (state.purchases || [])
-        .map((p) => `<tr><td>#${p.id}</td><td>${p.supplier_name}</td><td>${p.product_name}</td><td>${p.qty}</td><td>${curr} ${Number(p.total_amount).toFixed(2)}</td><td>${p.created_at}</td></tr>`)
-        .join("");
-
-      // Expenses table
-      document.getElementById("expensesTableBody").innerHTML = (state.expenses || [])
-        .map((e) => `<tr><td>${e.title}</td><td>${e.category}</td><td>${curr} ${Number(e.amount).toFixed(2)}</td><td>${e.created_at}</td></tr>`)
-        .join("");
-
-      // Customers
-      document.getElementById("customersList").innerHTML = (state.customers || [])
-        .map((c) => `<li>${c.name} ${c.phone ? "(" + c.phone + ")" : ""}</li>`)
-        .join("");
-
-      // Receipts
-      const recDiv = document.getElementById("receiptsList");
-      recDiv.innerHTML = "";
-      (state.bills || []).forEach((b) => {
-        const btn = document.createElement("div");
-        btn.style.padding = "8px";
-        btn.style.borderBottom = "1px solid #e5e7eb";
-        btn.style.cursor = "pointer";
-        btn.textContent = `${b.customer_name} | ${b.payment_method} | ${curr} ${Number(b.final_total).toFixed(2)} | ${b.created_at}`;
-        btn.onclick = () => {
-          document.getElementById("receiptDetailBox").textContent = b.bill_text || JSON.stringify(b, null, 2);
-        };
-        recDiv.appendChild(btn);
-      });
-
-      // Report summary
-      const totalSales = (state.bills || []).reduce((s, b) => s + Number(b.final_total || 0), 0);
-      const totalExpenses = (state.expenses || []).reduce((s, e) => s + Number(e.amount || 0), 0);
-      document.getElementById("reportSummaryBox").innerHTML = `
-        <h3 style="margin-top:0;">Summary Report</h3>
-        <p>Total Bills: ${(state.bills || []).length}</p>
-        <p>Total Sales: ${curr} ${totalSales.toFixed(2)}</p>
-        <p>Total Expenses: ${curr} ${totalExpenses.toFixed(2)}</p>
-        <p>Net Balance: ${curr} ${(totalSales - totalExpenses).toFixed(2)}</p>
-      `;
-
-      // Settings fields
-      document.getElementById("setCompany").value = state.settings?.companyName || "";
-      document.getElementById("setAddress").value = state.settings?.companyAddress || "";
-      document.getElementById("setCurrency").value = state.settings?.currency || "INR";
-      document.getElementById("setUpi").value = state.settings?.upiId || "";
-    }
-
-    (async () => {
-      state = await window.posApi.getState();
-      renderAll();
-      window.posApi.onStateUpdated((nextState) => {
-        state = nextState;
-        renderAll();
-      });
-    })();
   <script src="app.js"></script>
 </body>
 </html>
