@@ -15,14 +15,15 @@
     "electron": "^32.2.0",
     "electron-builder": "^25.1.8"
   },
-  "build": {
-    "appId": "com.techbay.billing.desktop",
-    "productName": "Techbay POS",
-    "win": {
-      "target": [
-        "nsis",
-        "portable"
-      ]
-    }
+ "build": {
+  "appId": "com.techbay.billing.desktop",
+  "productName": "Techbay POS",
+  "publish": null,
+  "win": {
+    "target": [
+      "nsis",
+      "portable"
+    ]
   }
+ } 
 }
