@@ -1,33 +1,27 @@
 {
-  "name": "offline-billing-pos",
-  "productName": "Offline Billing POS",
+  "name": "techbay-pos-desktop",
   "version": "1.0.0",
-  "description": "Offline Windows billing software with cloud sync hook",
+  "description": "Techbay POS Windows Desktop App synced with Supabase",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "dist:win": "electron-builder --win nsis --x64 --publish never"
+    "build:win": "electron-builder --win --x64"
   },
-  "build": {
-    "appId": "com.example.offlinebillingpos",
-    "productName": "Offline Billing POS",
-    "win": {
-      "target": [
-        {
-          "target": "nsis",
-          "arch": [
-            "x64"
-          ]
-        }
-      ]
-    },
-    "nsis": {
-      "oneClick": false,
-      "allowToChangeInstallationDirectory": true
-    }
+  "dependencies": {
+    "electron-store": "^8.2.0"
   },
   "devDependencies": {
-    "electron": "^33.2.1",
+    "electron": "^32.2.0",
     "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "com.techbay.billing.desktop",
+    "productName": "Techbay POS",
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ]
+    }
   }
 }
